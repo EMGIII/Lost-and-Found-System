@@ -1,0 +1,31 @@
+namespace WebApplication1.Domain;
+
+public enum UserRole
+{
+    Student,
+    Faculty,
+    Staff
+}
+
+public enum ItemType
+{
+    Lost,
+    Found
+}
+
+public enum ItemStatus
+{
+    Lost,
+    Found,
+    ClaimPending,
+    Claimed,
+    Returned
+}
+
+public enum ClaimStatus
+{
+    Pending,
+    UnderReview,
+    Approved,
+    Rejected
+}

@@ -1,0 +1,198 @@
+﻿using WebApplication1.Domain;
+using WebApplication1.Infrastructure;
+
+namespace WebApplication1.Application;
+
+public sealed class LostFoundManager
+{
+    private static readonly object SyncRoot = new();
+    private readonly JsonItemRepository _itemRepository;
+    private readonly JsonClaimRepository _claimRepository;
+    private readonly List<Item> _items;
+    private readonly List<Claim> _claims;
+
+    public LostFoundManager(JsonItemRepository itemRepository, JsonClaimRepository claimRepository)
+    {
+        _itemRepository = itemRepository;
+        _claimRepository = claimRepository;
+        _items = _itemRepository.Load();
+        _claims = _claimRepository.Load();
+    }
+
+    public IReadOnlyList<Item> Items => _items.AsReadOnly();
+    public IReadOnlyList<Claim> Claims => _claims.AsReadOnly();
+
+    public IReadOnlyList<Item> SearchItems(SearchCriteria criteria)
+    {
+        var query = criteria.Query?.Trim();
+        var category = criteria.Category?.Trim();
+        var location = criteria.Location?.Trim();
+
+        return _items.Where(item =>
+            (string.IsNullOrWhiteSpace(query) || item.Name.Contains(query, StringComparison.OrdinalIgnoreCase) || item.Description.Contains(query, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(category) || item.Category.Equals(category, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(location) || item.Location.Contains(location, StringComparison.OrdinalIgnoreCase)) &&
+            (!criteria.Type.HasValue || item.Type == criteria.Type.Value) &&
+            (!criteria.Status.HasValue || item.Status == criteria.Status.Value) &&
+            (!criteria.DateFrom.HasValue || item.DateReported.Date >= criteria.DateFrom.Value.Date) &&
+            (!criteria.DateTo.HasValue || item.DateReported.Date <= criteria.DateTo.Value.Date))
+            .OrderByDescending(item => item.DateReported)
+            .ToList();
+    }
+
+    public Item GetItem(string itemId) => _items.FirstOrDefault(item => item.ItemId == itemId)
+        ?? throw new DomainValidationException("The requested item does not exist.");
+
+    public void RemoveItem(Staff administrator, string itemId)
+    {
+        var item = GetItem(itemId);
+        _items.Remove(item);
+        _claims.RemoveAll(claim => claim.ItemId.Equals(itemId, StringComparison.OrdinalIgnoreCase));
+        Save();
+    }
+
+    public Claim GetClaim(string claimId) => _claims.FirstOrDefault(claim => claim.ClaimId == claimId)
+        ?? throw new DomainValidationException("The requested claim does not exist.");
+
+    public IReadOnlyList<Claim> SearchClaims(string? query, ClaimStatus? status)
+    {
+        var term = query?.Trim();
+        return _claims.Where(claim =>
+                (string.IsNullOrWhiteSpace(term) ||
+                 claim.ClaimId.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                 claim.ItemId.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                 claim.ClaimantId.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                 claim.Description.Contains(term, StringComparison.OrdinalIgnoreCase)) &&
+                (!status.HasValue || claim.Status == status.Value))
+            .OrderByDescending(claim => claim.SubmittedDate)
+            .ToList();
+    }
+
+    public LostItem AddLostItem(User reporter, string itemId, string name, string description, string category, string location, DateTime dateLost)
+    {
+        if (reporter.Role is not (UserRole.Student or UserRole.Faculty))
+        {
+            throw new DomainValidationException("Only students and faculty may submit lost-item reports.");
+        }
+
+        EnsureNewItemId(itemId);
+        var item = new LostItem(itemId, name, description, category, location, dateLost, DateTime.UtcNow, reporter.UserId);
+        _items.Add(item);
+        Save();
+        return item;
+    }
+
+    public FoundItem AddFoundItem(Staff reporter, string itemId, string name, string description, string category, string location, DateTime dateFound)
+    {
+        EnsureNewItemId(itemId);
+        var item = new FoundItem(itemId, name, description, category, location, dateFound, DateTime.UtcNow, reporter.UserId);
+        _items.Add(item);
+        Save();
+        return item;
+    }
+
+    public Claim AddClaim(User claimant, string claimId, string itemId, string description)
+    {
+        if (claimant.Role is not (UserRole.Student or UserRole.Faculty))
+        {
+            throw new DomainValidationException("Only students and faculty may submit claims.");
+        }
+
+        if (_claims.Any(claim => claim.ClaimId.Equals(claimId, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DomainValidationException("The claim ID is already in use.");
+        }
+
+        var item = GetItem(itemId);
+        if (item is not FoundItem || item.Status is ItemStatus.Returned or ItemStatus.Claimed)
+        {
+            throw new DomainValidationException("Only an available found item can be claimed.");
+        }
+
+        if (_claims.Any(claim => claim.ItemId == itemId && claim.ClaimantId == claimant.UserId && claim.Status == ClaimStatus.Pending))
+        {
+            throw new DomainValidationException("You already have a pending claim for this item.");
+        }
+
+        var claim = new Claim(claimId, itemId, claimant.UserId, description, DateTime.UtcNow);
+        claim.Submit();
+        _claims.Add(claim);
+        if (item.Status == ItemStatus.Found)
+        {
+            item.UpdateStatus(ItemStatus.ClaimPending);
+        }
+
+        Save();
+        return claim;
+    }
+
+    public Claim BeginClaimReview(Staff reviewer, string claimId)
+    {
+        var claim = GetClaim(claimId);
+        claim.BeginReview(reviewer.UserId);
+        Save();
+        return claim;
+    }
+
+    public Claim ReviewClaim(Staff reviewer, string claimId, bool approve, string? rejectionReason = null)
+    {
+        var claim = GetClaim(claimId);
+        var item = GetItem(claim.ItemId);
+
+        if (approve)
+        {
+            claim.Approve(reviewer.UserId, DateTime.UtcNow);
+            item.UpdateStatus(ItemStatus.Claimed);
+            foreach (var otherClaim in _claims.Where(candidate => candidate.ItemId == item.ItemId && candidate.ClaimId != claim.ClaimId && candidate.Status is ClaimStatus.Pending or ClaimStatus.UnderReview))
+            {
+                otherClaim.Reject(reviewer.UserId, DateTime.UtcNow, "Another claim for this item was approved.");
+            }
+        }
+        else
+        {
+            claim.Reject(reviewer.UserId, DateTime.UtcNow, rejectionReason ?? string.Empty);
+            if (!_claims.Any(candidate => candidate.ItemId == item.ItemId && candidate.Status is ClaimStatus.Pending or ClaimStatus.UnderReview))
+            {
+                item.UpdateStatus(ItemStatus.Found);
+            }
+        }
+
+        Save();
+        return claim;
+    }
+
+    public Item MarkReturned(Staff staff, string itemId)
+    {
+        var item = GetItem(itemId);
+        if (item.Status != ItemStatus.Claimed)
+        {
+            throw new DomainValidationException("Only an approved claimed item can be marked as returned.");
+        }
+
+        item.UpdateStatus(ItemStatus.Returned);
+        Save();
+        return item;
+    }
+
+    public IReadOnlyList<Claim> GetClaimsForUser(string userId) =>
+        _claims.Where(claim => claim.ClaimantId == userId).OrderByDescending(claim => claim.SubmittedDate).ToList();
+
+    public void SaveData() => Save();
+
+    private void EnsureNewItemId(string itemId)
+    {
+        if (string.IsNullOrWhiteSpace(itemId) || _items.Any(item => item.ItemId.Equals(itemId.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DomainValidationException("The item ID is required and must be unique.");
+        }
+    }
+
+    private void Save()
+    {
+        lock (SyncRoot)
+        {
+            _itemRepository.Save(_items);
+            _claimRepository.Save(_claims);
+        }
+    }
+}

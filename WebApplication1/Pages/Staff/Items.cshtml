@@ -1,0 +1,7 @@
+@page
+@using WebApplication1.Domain
+@model WebApplication1.Pages.Staff.ItemsModel
+@{
+	ViewData["Title"] = "Manage items";
+}
+<h1>Manage items</h1><p class="text-muted">Staff can mark a verified claimed item as returned.</p>@if(TempData["Message"] is string message){<div class="alert alert-success">@message</div>}<div class="table-responsive"><table class="table align-middle bg-white shadow-sm"><thead><tr><th>Item</th><th>Type</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody>@foreach(var item in Model.Items){<tr><td><a asp-page="/Items/Details" asp-route-id="@item.ItemId">@item.Name</a></td><td>@item.Type</td><td>@item.Location</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td>@if(item.Status == ItemStatus.Claimed || item.Status == ItemStatus.Lost){<form method="post"><input type="hidden" name="itemId" value="@item.ItemId" /><button class="btn btn-sm btn-primary">Mark returned</button></form>}</td></tr>}</tbody></table></div>

@@ -1,0 +1,6 @@
+@page
+@model WebApplication1.Pages.Staff.ClaimsModel
+@{
+	ViewData["Title"] = "Manage claims";
+}
+<h1>Manage claims</h1><p class="text-muted">Review claimant-provided evidence before approving or rejecting a request.</p>@if(TempData["Message"] is string message){<div class="alert alert-success">@message</div>}@if(Model.Claims.Count == 0){<div class="empty-state p-4 rounded-3">There are no pending claims.</div>}else{<div class="table-responsive"><table class="table align-middle bg-white shadow-sm"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Description</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>@foreach(var claim in Model.Claims){<tr><td>@claim.ClaimId</td><td>@claim.ItemId</td><td>@claim.ClaimantId</td><td>@claim.Description</td><td>@claim.SubmittedDate.ToString("yyyy-MM-dd")</td><td><form method="post" class="d-flex gap-2"><input type="hidden" name="claimId" value="@claim.ClaimId" /><button class="btn btn-sm btn-success" name="approve" value="true">Approve</button><button class="btn btn-sm btn-outline-danger" name="approve" value="false">Reject</button></form></td></tr>}</tbody></table></div>}

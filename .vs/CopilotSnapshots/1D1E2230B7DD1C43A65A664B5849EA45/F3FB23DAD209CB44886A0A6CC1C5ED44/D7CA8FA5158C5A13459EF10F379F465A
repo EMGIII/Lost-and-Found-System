@@ -1,0 +1,45 @@
+﻿@page
+@using WebApplication1.Domain
+@model WebApplication1.Pages.Admin.IndexModel
+@{
+	ViewData["Title"] = "Administrator Dashboard";
+}
+<div class="admin-shell">
+	<aside class="admin-sidebar rounded-3 p-3">
+		<p class="sidebar-label">Administration</p>
+		<h2 class="h5 mb-4 text-white">Campus control center</h2>
+		<nav class="nav flex-column gap-1">
+			<a class="admin-nav-link active" asp-page="/Admin/Index"><span>▦</span> Overview</a>
+			<a class="admin-nav-link" href="#items"><span>▤</span> Item reports</a>
+			<a class="admin-nav-link" href="#claims"><span>✓</span> Claim verification <span class="notification-pill">@(Model.PendingClaims + Model.UnderReviewClaims)</span></a>
+			<a class="admin-nav-link" asp-page="/Staff/Items"><span>↻</span> Return tracking</a>
+		</nav>
+	</aside>
+	<main class="admin-content">
+		<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+			<div><p class="eyebrow mb-1">Administrator workspace</p><h1 class="h2 mb-1">Dashboard overview</h1><p class="text-muted mb-0">Monitor campus reports, claim verification, and verified returns.</p></div>
+			<div class="d-flex align-items-center gap-2"><span class="admin-avatar">@User.Identity?.Name?.FirstOrDefault()</span><div><div class="fw-semibold">Administrator</div><div class="small text-muted">@User.Identity?.Name</div></div></div>
+		</div>
+		<div class="row g-3 mb-4">
+			<div class="col-6 col-xl-3"><div class="metric-card metric-blue"><span>Total items</span><strong>@Model.TotalItems</strong><small>All saved reports</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-amber"><span>Lost items</span><strong>@Model.LostItems</strong><small>Reports awaiting match</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-green"><span>Found items</span><strong>@Model.FoundItems</strong><small>Registered discoveries</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-purple"><span>Returned</span><strong>@Model.ReturnedItems</strong><small>Successfully handed back</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-orange"><span>Pending claims</span><strong>@Model.PendingClaims</strong><small>Awaiting review</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-cyan"><span>Under review</span><strong>@Model.UnderReviewClaims</strong><small>Being verified</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-teal"><span>Approved claims</span><strong>@Model.ApprovedClaims</strong><small>Ready for return</small></div></div>
+			<div class="col-6 col-xl-3"><div class="metric-card metric-red"><span>Rejected claims</span><strong>@Model.RejectedClaims</strong><small>Decision recorded</small></div></div>
+		</div>
+		@if (TempData["Message"] is string message){<div class="alert alert-success">@message</div>}
+		<section id="items" class="admin-section mb-4">
+			<div class="section-heading"><div><h2 class="h5 mb-1">Item reports</h2><p class="text-muted mb-0">Search and filter persisted lost and found records.</p></div><span class="record-count">@Model.Items.Count result(s)</span></div>
+			<form method="get" class="filter-panel mb-3"><div class="row g-2 align-items-end"><div class="col-md-3"><label asp-for="Query" class="form-label">Name or description</label><input asp-for="Query" class="form-control" /></div><div class="col-md-2"><label asp-for="Category" class="form-label">Category</label><input asp-for="Category" class="form-control" /></div><div class="col-md-2"><label asp-for="Location" class="form-label">Location</label><input asp-for="Location" class="form-control" /></div><div class="col-md-2"><label asp-for="Status" class="form-label">Status</label><select asp-for="Status" asp-items="Html.GetEnumSelectList<ItemStatus>()" class="form-select"><option value="">All statuses</option></select></div><div class="col-md-2"><label asp-for="DateFrom" class="form-label">From</label><input asp-for="DateFrom" type="date" class="form-control" /></div><div class="col-md-1 d-flex"><button class="btn btn-primary w-100">Filter</button></div><div class="col-12"><a asp-page="/Admin/Index" class="small">Clear item filters</a></div></div></form>
+				@if(Model.Items.Count == 0){<div class="empty-state p-4 rounded-3">No item reports match the selected filters.</div>}else{<div class="table-responsive"><table class="table admin-table align-middle"><thead><tr><th>Item</th><th>Type</th><th>Category</th><th>Location</th><th>Reported</th><th>Status</th><th>Actions</th></tr></thead><tbody>@foreach(var item in Model.Items){<tr><td><div class="fw-semibold">@item.Name</div><div class="small text-muted">@item.ItemId</div></td><td><span class="type-dot @(item.Type == ItemType.Found ? "found" : "lost")"></span>@item.Type</td><td>@item.Category</td><td>@item.Location</td><td>@item.DateReported.ToString("MMM d, yyyy")</td><td><span class="status-badge">@item.Status</span></td><td><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-primary" asp-page="/Items/Details" asp-route-id="@item.ItemId">View</a><form method="post" asp-page-handler="Delete"><input type="hidden" name="ItemId" value="@item.ItemId" /><input type="hidden" name="ConfirmDelete" value="true" /><button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Permanently remove this lost or found item and its linked claims?');">Remove</button></form></div></td></tr>}</tbody></table></div>}
+		</section>
+		<section id="claims" class="admin-section">
+			<div class="section-heading"><div><h2 class="h5 mb-1">Claim verification queue</h2><p class="text-muted mb-0">Review ownership evidence and record an auditable decision.</p></div><span class="record-count">@Model.Claims.Count result(s)</span></div>
+			<form method="get" class="filter-panel mb-3"><div class="row g-2 align-items-end"><div class="col-md-5"><label asp-for="ClaimQuery" class="form-label">Search claims</label><input asp-for="ClaimQuery" class="form-control" placeholder="Claim ID, claimant, or item" /></div><div class="col-md-3"><label asp-for="ClaimStatusFilter" class="form-label">Claim status</label><select asp-for="ClaimStatusFilter" asp-items="Html.GetEnumSelectList<ClaimStatus>()" class="form-select"><option value="">All claim statuses</option></select></div><div class="col-md-2"><button class="btn btn-primary">Filter claims</button></div><div class="col-md-2"><a asp-page="/Admin/Index" class="btn btn-outline-secondary">Clear</a></div></div></form>
+			@if(Model.Claims.Count == 0){<div class="empty-state p-4 rounded-3">No claim records match the selected filters.</div>}else{<div class="table-responsive"><table class="table admin-table align-middle"><thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Submitted</th><th>Status</th><th>Reviewed by</th><th></th></tr></thead><tbody>@foreach(var claim in Model.Claims){<tr><td><span class="fw-semibold">@claim.ClaimId</span></td><td>@claim.ItemId</td><td>@claim.ClaimantId</td><td>@claim.SubmittedDate.ToString("MMM d, yyyy")</td><td><span class="status-badge">@claim.Status</span></td><td>@(claim.ReviewedBy ?? "—")</td><td><a class="btn btn-sm btn-primary" asp-page="/Admin/Claims/Details" asp-route-id="@claim.ClaimId">View details</a></td></tr>}</tbody></table></div>}
+		</section>
+	</main>
+</div>

@@ -1,0 +1,60 @@
+using Microsoft.AspNetCore.Http;
+
+namespace WebApplication1.Application;
+
+public sealed class ItemImageStorage(IWebHostEnvironment environment)
+{
+    private const long MaxFileSize = 5 * 1024 * 1024;
+    private static readonly IReadOnlyDictionary<string, string> SupportedContentTypes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["image/jpeg"] = ".jpg",
+        ["image/png"] = ".png",
+        ["image/gif"] = ".gif",
+        ["image/webp"] = ".webp"
+    };
+
+    public async Task<string> SaveAsync(IFormFile file, CancellationToken cancellationToken = default)
+    {
+        if (file.Length == 0)
+        {
+            throw new InvalidDataException("The image file is empty.");
+        }
+
+        if (file.Length > MaxFileSize)
+        {
+            throw new InvalidDataException("The image must be 5 MB or smaller.");
+        }
+
+        if (!SupportedContentTypes.TryGetValue(file.ContentType, out var extension))
+        {
+            throw new InvalidDataException("Only JPEG, PNG, GIF, and WebP images are supported.");
+        }
+
+        await using var input = file.OpenReadStream();
+        var header = new byte[12];
+        var bytesRead = await input.ReadAsync(header, cancellationToken);
+        if (!IsSupportedImage(header, bytesRead, file.ContentType))
+        {
+            throw new InvalidDataException("The uploaded file is not a valid image.");
+        }
+
+        var directory = Path.Combine(environment.WebRootPath, "uploads", "items");
+        Directory.CreateDirectory(directory);
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(directory, fileName);
+
+        await using var output = File.Create(filePath);
+        input.Position = 0;
+        await input.CopyToAsync(output, cancellationToken);
+        return $"/uploads/items/{fileName}";
+    }
+
+    private static bool IsSupportedImage(byte[] header, int bytesRead, string contentType) => contentType switch
+    {
+        "image/jpeg" => bytesRead >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+        "image/png" => bytesRead >= 8 && header.AsSpan(0, 8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+        "image/gif" => bytesRead >= 6 && (header.AsSpan(0, 6).SequenceEqual("GIF87a"u8) || header.AsSpan(0, 6).SequenceEqual("GIF89a"u8)),
+        "image/webp" => bytesRead >= 12 && header.AsSpan(0, 4).SequenceEqual("RIFF"u8) && header.AsSpan(8, 4).SequenceEqual("WEBP"u8),
+        _ => false
+    };
+}

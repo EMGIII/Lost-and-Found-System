@@ -1,0 +1,44 @@
+[
+  {
+    "userId": "student-001",
+    "name": "Emjay Reconday",
+    "role": 0,
+    "identifier": "2026-0001",
+    "passwordHash": "AQAAAAIAAYagAAAAEPPmlO1G7acF\u002BwydYWa96yh0WlXtYcV8RYonHP001eqSLYkfPOuvSnXCxoC6q\u002BU0Eg=="
+  },
+  {
+    "userId": "faculty-001",
+    "name": "Demo Faculty",
+    "role": 1,
+    "identifier": "FAC-001",
+    "passwordHash": "AQAAAAIAAYagAAAAEAcMXLraqqovptqrfhPGgorWIre4YCnC\u002BemWAr6HGE066laOrr/7Df6Rid3mCEomBw=="
+  },
+  {
+    "userId": "staff-001",
+    "name": "Campus Staff",
+    "role": 2,
+    "identifier": "STAFF-001",
+    "passwordHash": "AQAAAAIAAYagAAAAEPfL65jawaLHx98kwDtsXFgDAxq26qFKZBKRDnU/L8VvDSJfjVZfF9DGsQl2hBMELg=="
+  },
+  {
+    "userId": "001",
+    "name": "Campus Administrator",
+    "role": 2,
+    "identifier": "ADMIN-001",
+    "passwordHash": "AQAAAAIAAYagAAAAELZK59Kpxe\u002BLoUCdU5IYG/mJ30pgsRJ492\u002Bpty7DyePXQ/50kRwXjS8DE0NMQGtipw=="
+  },
+  {
+    "userId": "002",
+    "name": "Emjay T. Reconday",
+    "role": 0,
+    "identifier": "25-008",
+    "passwordHash": "AQAAAAIAAYagAAAAEKLnNwaJMxaWjlYqVkpp1eOPmwrD1gvJw0MX\u002Bh3qd8V1mePaNZh34UAt9piJUPq4qg=="
+  },
+  {
+    "userId": "student-8dab509666314ee5a114b2efd1e181ec",
+    "name": "Christ jan O Mendoza",
+    "role": 0,
+    "identifier": "25-157",
+    "passwordHash": "AQAAAAIAAYagAAAAEKsqbYWtE5XCyftu6xgsjw9iek\u002BDHy/1tveYNeRqBeapjrs/1zJ6tq6r/WvLN47a/A=="
+  }
+]

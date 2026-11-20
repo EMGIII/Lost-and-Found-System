@@ -1,0 +1,23 @@
+using Microsoft.AspNetCore.Identity;
+using WebApplication1.Domain;
+using WebApplication1.Infrastructure;
+
+namespace WebApplication1.Application;
+
+public static class ApplicationServiceExtensions
+{
+    public static IServiceCollection AddLostFoundApplication(this IServiceCollection services)
+    {
+        services.AddSingleton<PasswordHasher<User>>();
+        services.AddSingleton<JsonFileStore<ItemRecord>>();
+        services.AddSingleton<JsonFileStore<ClaimRecord>>();
+        services.AddSingleton<JsonFileStore<UserRecord>>();
+        services.AddSingleton<JsonItemRepository>();
+        services.AddSingleton<JsonClaimRepository>();
+        services.AddSingleton<JsonUserRepository>();
+        services.AddSingleton<AuthenticationService>();
+        services.AddSingleton<ItemImageStorage>();
+        services.AddSingleton<LostFoundManager>();
+        return services;
+    }
+}

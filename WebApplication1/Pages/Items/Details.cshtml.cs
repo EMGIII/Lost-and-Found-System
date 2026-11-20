@@ -1,0 +1,18 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication1.Application;
+using WebApplication1.Domain;
+
+namespace WebApplication1.Pages.Items;
+
+public class DetailsModel(LostFoundManager manager) : PageModel
+{
+    public Item? Item { get; private set; }
+    public bool CanClaim => User.Identity?.IsAuthenticated == true && Item is (LostItem or FoundItem) && Item.Status is (ItemStatus.Lost or ItemStatus.Found);
+
+    public IActionResult OnGet(string id)
+    {
+        try { Item = manager.GetItem(id); return Page(); }
+        catch (DomainValidationException) { return NotFound(); }
+    }
+}

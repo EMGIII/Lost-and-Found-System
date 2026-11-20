@@ -1,0 +1,24 @@
+[
+  {
+    "claimId": "CLM-ED407B0F",
+    "itemId": "LOST-1C62E4D3F18C4",
+    "claimantId": "002",
+    "description": "ddhgfkhguyhg",
+    "status": 3,
+    "submittedDate": "2026-11-03T00:00:00Z",
+    "reviewedBy": "001",
+    "reviewDate": "2026-11-03T00:00:00Z",
+    "rejectionReason": "dgrgrgfd"
+  },
+  {
+    "claimId": "CLM-B1A1E94A",
+    "itemId": "LOST-23EB46877F554",
+    "claimantId": "002",
+    "description": "esdegfdhfghgkjhgv df dfg thtryre rtr yrtef",
+    "status": 2,
+    "submittedDate": "2026-11-03T00:00:00Z",
+    "reviewedBy": "001",
+    "reviewDate": "2026-11-03T00:00:00Z",
+    "rejectionReason": null
+  }
+]

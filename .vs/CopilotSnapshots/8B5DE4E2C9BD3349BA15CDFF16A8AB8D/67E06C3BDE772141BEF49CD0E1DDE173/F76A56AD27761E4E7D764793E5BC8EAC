@@ -1,0 +1,81 @@
+﻿namespace WebApplication1.Domain;
+
+public sealed class Claim
+{
+    private string _description;
+
+    public Claim(string claimId, string itemId, string claimantId, string description, DateTime submittedDate)
+    {
+        ClaimId = Require(claimId, nameof(claimId), 50);
+        ItemId = Require(itemId, nameof(itemId), 50);
+        ClaimantId = Require(claimantId, nameof(claimantId), 50);
+        _description = Require(description, nameof(description), 1000);
+        SubmittedDate = ValidateDate(submittedDate, nameof(submittedDate));
+        Status = ClaimStatus.Pending;
+    }
+
+    public string ClaimId { get; }
+    public string ItemId { get; }
+    public string ClaimantId { get; }
+    public string Description { get => _description; private set => _description = Require(value, nameof(Description), 1000); }
+    public ClaimStatus Status { get; private set; }
+    public DateTime SubmittedDate { get; }
+    public string? ReviewedBy { get; private set; }
+    public DateTime? ReviewDate { get; private set; }
+
+    public void Submit()
+    {
+        if (Status != ClaimStatus.Pending)
+        {
+            throw new DomainValidationException("Only a pending claim can be submitted.");
+        }
+    }
+
+    public void Approve(string reviewerId, DateTime reviewDate)
+    {
+        Review(ClaimStatus.Approved, reviewerId, reviewDate);
+    }
+
+    public void Reject(string reviewerId, DateTime reviewDate)
+    {
+        Review(ClaimStatus.Rejected, reviewerId, reviewDate);
+    }
+
+    private void Review(ClaimStatus result, string reviewerId, DateTime reviewDate)
+    {
+        if (Status != ClaimStatus.Pending)
+        {
+            throw new DomainValidationException("Only a pending claim can be reviewed.");
+        }
+
+        ReviewedBy = Require(reviewerId, nameof(reviewerId), 50);
+        ReviewDate = ValidateDate(reviewDate, nameof(reviewDate));
+        Status = result;
+    }
+
+    private static string Require(string? value, string fieldName, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new DomainValidationException($"{fieldName} is required.");
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length > maxLength)
+        {
+            throw new DomainValidationException($"{fieldName} cannot exceed {maxLength} characters.");
+        }
+
+        return trimmed;
+    }
+
+    private static DateTime ValidateDate(DateTime value, string fieldName)
+    {
+        if (value == default || value.Date > DateTime.UtcNow.Date)
+        {
+            throw new DomainValidationException($"{fieldName} must be a valid date that is not in the future.");
+        }
+
+        return value.Date;
+    }
+}

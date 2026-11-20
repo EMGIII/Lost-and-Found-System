@@ -1,0 +1,14 @@
+using WebApplication1.Domain;
+
+namespace WebApplication1.Application;
+
+public sealed class SearchCriteria
+{
+    public string? Query { get; init; }
+    public string? Category { get; init; }
+    public string? Location { get; init; }
+    public ItemType? Type { get; init; }
+    public ItemStatus? Status { get; init; }
+    public DateTime? DateFrom { get; init; }
+    public DateTime? DateTo { get; init; }
+}

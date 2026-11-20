@@ -1,0 +1,23 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication1.Application;
+using WebApplication1.Domain;
+
+namespace WebApplication1.Pages.Staff;
+
+[Authorize(Policy = "StaffOnly")]
+public class ClaimsModel(LostFoundManager manager, AuthenticationService authentication) : PageModel
+{
+    public IReadOnlyList<Claim> Claims { get; private set; } = [];
+
+    public void OnGet() => Claims = manager.Claims.Where(claim => claim.Status == ClaimStatus.Pending).OrderBy(claim => claim.SubmittedDate).ToList();
+
+    public IActionResult OnPost(string claimId, bool approve, string? rejectionReason)
+    {
+        var user = authentication.FindUser(User.Identity!.Name!);
+        if (user is not WebApplication1.Domain.Staff staff) return Forbid();
+        try { manager.ReviewClaim(staff, claimId, approve, rejectionReason); TempData["Message"] = approve ? "Claim approved and other pending claims were rejected." : "Claim rejected."; return RedirectToPage(); }
+        catch (DomainValidationException exception) { ModelState.AddModelError(string.Empty, exception.Message); OnGet(); return Page(); }
+    }
+}

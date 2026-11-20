@@ -1,0 +1,43 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication1.Application;
+using WebApplication1.Domain;
+
+namespace WebApplication1.Pages.Items;
+
+[Authorize]
+public class ReportLostModel(LostFoundManager manager, AuthenticationService authentication, ItemImageStorage imageStorage) : PageModel
+{
+    [BindProperty] public InputModel Input { get; set; } = new();
+
+    public void OnGet() { }
+
+    public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid) return Page();
+        var user = authentication.FindUser(User.Identity!.Name!);
+        if (user is null) return Challenge();
+        try
+        {
+            var imageUrl = Input.Image is null ? null : await imageStorage.SaveAsync(Input.Image, cancellationToken);
+            manager.AddLostItem(user, Input.Name, Input.Description, Input.Category, Input.Location, Input.DateLost, imageUrl);
+            TempData["Message"] = "Your lost-item report was saved.";
+            return RedirectToPage("/Index");
+        }
+        catch (InvalidDataException exception) { ModelState.AddModelError("Input.Image", exception.Message); return Page(); }
+        catch (DomainValidationException exception) { ModelState.AddModelError(string.Empty, exception.Message); return Page(); }
+    }
+
+    public sealed class InputModel
+    {
+        [Required, StringLength(100), Display(Name = "Item name")] public string Name { get; set; } = string.Empty;
+        [Required, StringLength(60)] public string Category { get; set; } = string.Empty;
+        [Required, StringLength(160)] public string Location { get; set; } = string.Empty;
+        [Required, StringLength(1000)] public string Description { get; set; } = string.Empty;
+        [Required, DataType(DataType.Date)] public DateTime DateLost { get; set; } = DateTime.Today;
+        [Display(Name = "Photo (optional)")] public IFormFile? Image { get; set; }
+    }
+}

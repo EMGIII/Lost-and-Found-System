@@ -1,0 +1,158 @@
+﻿using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
+using WebApplication1.Domain;
+
+namespace WebApplication1.Infrastructure;
+
+public sealed class JsonItemRepository(JsonFileStore<ItemRecord> store)
+{
+    public List<Item> Load() => store.Load().Select(ToDomain).ToList();
+
+    public void Save(IEnumerable<Item> items) => store.Save(items.Select(ToRecord));
+
+    private static Item ToDomain(ItemRecord record)
+    {
+        Item item = record.Type == ItemType.Lost
+            ? new LostItem(record.ItemId, record.Name, record.Description, record.Category, record.Location, record.EventDate, record.DateReported, record.ReportedByUserId)
+            : new FoundItem(record.ItemId, record.Name, record.Description, record.Category, record.Location, record.EventDate, record.DateReported, record.ReportedByUserId);
+        item.RestoreStatus(record.Status);
+        return item;
+    }
+
+    private static ItemRecord ToRecord(Item item) => new()
+    {
+        ItemId = item.ItemId,
+        Type = item.Type,
+        Name = item.Name,
+        Description = item.Description,
+        Category = item.Category,
+        Location = item.Location,
+        DateReported = item.DateReported,
+        ReportedByUserId = item.ReportedByUserId,
+        EventDate = item.Type == ItemType.Lost ? ((LostItem)item).DateLost : ((FoundItem)item).DateFound,
+        Status = item.Status
+    };
+}
+
+public sealed class JsonClaimRepository(JsonFileStore<ClaimRecord> store)
+{
+    public List<Claim> Load()
+    {
+        return store.Load().Select(record =>
+        {
+            var claim = new Claim(record.ClaimId, record.ItemId, record.ClaimantId, record.Description, record.SubmittedDate);
+            claim.RestoreReview(record.Status, record.ReviewedBy, record.ReviewDate, record.RejectionReason);
+            return claim;
+        }).ToList();
+    }
+
+    public void Save(IEnumerable<Claim> claims) => store.Save(claims.Select(claim => new ClaimRecord
+    {
+        ClaimId = claim.ClaimId,
+        ItemId = claim.ItemId,
+        ClaimantId = claim.ClaimantId,
+        Description = claim.Description,
+        Status = claim.Status,
+        SubmittedDate = claim.SubmittedDate,
+        ReviewedBy = claim.ReviewedBy,
+        ReviewDate = claim.ReviewDate,
+        RejectionReason = claim.RejectionReason
+    }));
+}
+
+public sealed record UserAccount(User User, string PasswordHash);
+
+public sealed class JsonUserRepository(JsonFileStore<UserRecord> store, PasswordHasher<User> passwordHasher)
+{
+    private static readonly object SyncRoot = new();
+
+    public List<UserAccount> Load() => store.Load().Select(ToAccount).ToList();
+
+    public void Save(IEnumerable<UserAccount> accounts) => store.Save(accounts.Select(account => ToRecord(account.User, account.PasswordHash)));
+
+    public UserAccount Add(string userId, string name, UserRole role, string identifier, string password)
+    {
+        lock (SyncRoot)
+        {
+            var accounts = Load();
+            if (accounts.Any(account => account.User.UserId.Equals(userId, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new DomainValidationException("That user ID is already registered.");
+            }
+
+            User user = role switch
+            {
+                UserRole.Student => new Student(userId, name, identifier),
+                UserRole.Faculty => new Faculty(userId, name, identifier),
+                _ => throw new DomainValidationException("Only Student or Faculty accounts can be created through registration.")
+            };
+
+            var account = new UserAccount(user, passwordHasher.HashPassword(user, password));
+            accounts.Add(account);
+            Save(accounts);
+            return account;
+        }
+    }
+
+    public void SeedIfEmpty()
+    {
+        var accounts = Load();
+        var admin = new Staff("001", "Campus Administrator", "ADMIN-001");
+        var adminAccount = new UserAccount(admin, passwordHasher.HashPassword(admin, "admin123"));
+
+        if (accounts.Count == 0)
+        {
+            var users = new User[]
+            {
+                admin,
+                new Student("student-001", "Emjay Reconday", "2026-0001"),
+                new Faculty("faculty-001", "Demo Faculty", "FAC-001"),
+                new Staff("staff-001", "Campus Staff", "STAFF-001")
+            };
+            Save(users.Select(user => user.UserId == admin.UserId
+                ? adminAccount
+                : new UserAccount(user, passwordHasher.HashPassword(user, "Demo123!"))));
+            return;
+        }
+
+        var existingAdmin = accounts.FindIndex(account =>
+            account.User.UserId.Equals(admin.UserId, StringComparison.OrdinalIgnoreCase));
+        if (existingAdmin >= 0)
+        {
+            accounts[existingAdmin] = adminAccount;
+        }
+        else
+        {
+            accounts.Add(adminAccount);
+        }
+
+        Save(accounts);
+    }
+
+    private static UserAccount ToAccount(UserRecord record)
+    {
+        User user = record.Role switch
+        {
+            UserRole.Student => new Student(record.UserId, record.Name, record.Identifier),
+            UserRole.Faculty => new Faculty(record.UserId, record.Name, record.Identifier),
+            UserRole.Staff => new Staff(record.UserId, record.Name, record.Identifier),
+            _ => throw new InvalidDataException($"Unsupported user role '{record.Role}'.")
+        };
+        return new UserAccount(user, record.PasswordHash);
+    }
+
+    private static UserRecord ToRecord(User user, string passwordHash) => new()
+    {
+        UserId = user.UserId,
+        Name = user.Name,
+        Role = user.Role,
+        Identifier = user switch
+        {
+            Student student => student.StudentNumber,
+            Faculty faculty => faculty.FacultyNumber,
+            Staff staff => staff.StaffCode,
+            _ => throw new InvalidDataException("Unsupported user type.")
+        },
+        PasswordHash = passwordHash
+    };
+}

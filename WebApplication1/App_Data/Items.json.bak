@@ -1,0 +1,80 @@
+[
+  {
+    "itemId": "LOST-23EB46877F554",
+    "type": 0,
+    "name": "Chris jan",
+    "description": "Beautiful, cute, cubby",
+    "category": "Person",
+    "location": "IT lab room 206",
+    "dateReported": "2026-11-01T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": "/uploads/items/e0adf8de8e9f4855b5a255476f01d4d6.jpg",
+    "eventDate": "2026-11-01T00:00:00",
+    "status": 3
+  },
+  {
+    "itemId": "LOST-3D23798B04884",
+    "type": 0,
+    "name": "Klett",
+    "description": "Cute, DDS",
+    "category": "Person",
+    "location": "Second floor CR",
+    "dateReported": "2026-11-01T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": "/uploads/items/a5aa85b7502f4e20b571e9b95b9cbe32.jpg",
+    "eventDate": "2026-11-01T00:00:00",
+    "status": 0
+  },
+  {
+    "itemId": "LOST-964F743E7AFC4",
+    "type": 0,
+    "name": "Andrei",
+    "description": "person with depression(PWD)",
+    "category": "Person",
+    "location": "Room 69",
+    "dateReported": "2026-11-01T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": "/uploads/items/bafb2bb3574941b1b0eff5769ac86d8b.jpg",
+    "eventDate": "2026-11-01T00:00:00",
+    "status": 0
+  },
+  {
+    "itemId": "LOST-2ACC975723444",
+    "type": 0,
+    "name": "David",
+    "description": "Bading",
+    "category": "Person",
+    "location": "Heaven",
+    "dateReported": "2026-11-01T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": "/uploads/items/79f5ef312287408aa08723db4afb6f7a.jpg",
+    "eventDate": "2026-11-01T00:00:00",
+    "status": 0
+  },
+  {
+    "itemId": "LOST-17C4989342F04",
+    "type": 0,
+    "name": "Francis",
+    "description": "Tomboy",
+    "category": "Person",
+    "location": "Minecraft world",
+    "dateReported": "2026-11-01T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": "/uploads/items/a9baedb2f28b4ef28727fcc63bd14fda.jpg",
+    "eventDate": "2026-11-01T00:00:00",
+    "status": 0
+  },
+  {
+    "itemId": "LOST-1C62E4D3F18C4",
+    "type": 0,
+    "name": "certificate or registration",
+    "description": "paper color: yellow",
+    "category": "paper",
+    "location": "css room",
+    "dateReported": "2026-11-03T00:00:00Z",
+    "reportedByUserId": "002",
+    "imageUrl": null,
+    "eventDate": "2026-11-03T00:00:00",
+    "status": 2
+  }
+]

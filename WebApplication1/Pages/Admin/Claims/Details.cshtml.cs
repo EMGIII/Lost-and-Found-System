@@ -1,0 +1,75 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebApplication1.Application;
+using WebApplication1.Domain;
+
+namespace WebApplication1.Pages.Admin.Claims;
+
+[Authorize(Policy = "AdministratorOnly")]
+public class DetailsModel(LostFoundManager manager, AuthenticationService authentication) : PageModel
+{
+    public Claim? Claim { get; private set; }
+    public Item? Item { get; private set; }
+    public User? Claimant { get; private set; }
+
+    [BindProperty] public string? RejectionReason { get; set; }
+    [BindProperty] public bool ConfirmDecision { get; set; }
+
+    public IActionResult OnGet(string id) => Load(id) ? Page() : NotFound();
+
+    public IActionResult OnPostBeginReview(string id)
+    {
+        if (!Load(id)) return NotFound();
+        var reviewer = GetStaff();
+        if (reviewer is null) return Forbid();
+        try
+        {
+            manager.BeginClaimReview(reviewer, id);
+            TempData["Message"] = "The claim is now under review and your administrator ID was recorded.";
+            return RedirectToPage(new { id });
+        }
+        catch (DomainValidationException exception) { ModelState.AddModelError(string.Empty, exception.Message); return Page(); }
+    }
+
+    public IActionResult OnPostDecision(string id, bool approve)
+    {
+        if (!Load(id)) return NotFound();
+        if (!ConfirmDecision)
+        {
+            ModelState.AddModelError(string.Empty, "Confirm the decision before changing the claim record.");
+            return Page();
+        }
+        if (!approve && string.IsNullOrWhiteSpace(RejectionReason))
+        {
+            ModelState.AddModelError(nameof(RejectionReason), "A rejection reason is required.");
+            return Page();
+        }
+
+        var reviewer = GetStaff();
+        if (reviewer is null) return Forbid();
+        try
+        {
+            manager.ReviewClaim(reviewer, id, approve, RejectionReason);
+            TempData["Message"] = approve
+                ? "The claim was approved. The item remains claimed until physical return is recorded."
+                : "The claim was rejected and the reason was saved.";
+            return RedirectToPage(new { id });
+        }
+        catch (DomainValidationException exception) { ModelState.AddModelError(string.Empty, exception.Message); return Page(); }
+    }
+
+    private bool Load(string id)
+    {
+        try
+        {
+            Claim = manager.GetClaim(id);
+            Item = manager.GetItem(Claim.ItemId);
+            Claimant = authentication.FindUser(Claim.ClaimantId);
+            return true;
+        }
+        catch (DomainValidationException) { return false; }
+    }
+
+    private WebApplication1.Domain.Staff? GetStaff() => authentication.FindUser(User.Identity?.Name ?? string.Empty) as WebApplication1.Domain.Staff;
+}

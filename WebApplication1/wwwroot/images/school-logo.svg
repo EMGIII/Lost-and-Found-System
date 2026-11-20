@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">Infotech Development Systems Colleges</title>
+  <desc id="desc">Green school emblem with IDSC initials</desc>
+  <defs>
+	<linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+	  <stop offset="0" stop-color="#76e34d"/>
+	  <stop offset="1" stop-color="#22a83b"/>
+	</linearGradient>
+  </defs>
+  <circle cx="120" cy="120" r="116" fill="#fff" stroke="#111" stroke-width="5"/>
+  <circle cx="120" cy="120" r="105" fill="url(#green)" stroke="#111" stroke-width="3"/>
+  <circle cx="120" cy="120" r="76" fill="#c9f1fb" stroke="#111" stroke-width="3"/>
+  <path d="M45 120h150M120 45c-24 22-24 128 0 150M120 45c24 22 24 128 0 150" fill="none" stroke="#74d94c" stroke-width="8" opacity=".8"/>
+  <g stroke="#111" stroke-width="2">
+	<rect x="70" y="70" width="47" height="47" rx="8" fill="#f7f7f7"/>
+	<rect x="123" y="70" width="47" height="47" rx="8" fill="#4bd33e"/>
+	<rect x="70" y="123" width="47" height="47" rx="8" fill="#4bd33e"/>
+	<rect x="123" y="123" width="47" height="47" rx="8" fill="#f7f7f7"/>
+  </g>
+  <g font-family="Georgia, serif" font-size="31" font-weight="700" text-anchor="middle" fill="#111">
+	<text x="94" y="104">I</text><text x="146" y="104">D</text>
+	<text x="94" y="157">S</text><text x="146" y="157">C</text>
+  </g>
+  <text x="120" y="25" font-family="Arial, sans-serif" font-size="7" font-weight="700" text-anchor="middle" letter-spacing="1.2">INFOTECH DEVELOPMENT SYSTEMS</text>
+  <text x="120" y="226" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle" letter-spacing="2">COLLEGES</text>
+</svg>

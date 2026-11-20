@@ -1,0 +1,40 @@
+using WebApplication1.Domain;
+
+namespace WebApplication1.Infrastructure;
+
+public sealed class ItemRecord
+{
+    public string ItemId { get; set; } = string.Empty;
+    public ItemType Type { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public DateTime DateReported { get; set; }
+    public string ReportedByUserId { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public DateTime EventDate { get; set; }
+    public ItemStatus Status { get; set; }
+}
+
+public sealed class ClaimRecord
+{
+    public string ClaimId { get; set; } = string.Empty;
+    public string ItemId { get; set; } = string.Empty;
+    public string ClaimantId { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public ClaimStatus Status { get; set; }
+    public DateTime SubmittedDate { get; set; }
+    public string? ReviewedBy { get; set; }
+    public DateTime? ReviewDate { get; set; }
+    public string? RejectionReason { get; set; }
+}
+
+public sealed class UserRecord
+{
+    public string UserId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public UserRole Role { get; set; }
+    public string Identifier { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+}

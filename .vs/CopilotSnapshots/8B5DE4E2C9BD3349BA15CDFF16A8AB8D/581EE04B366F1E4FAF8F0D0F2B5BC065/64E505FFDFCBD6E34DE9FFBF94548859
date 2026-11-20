@@ -1,0 +1,27 @@
+﻿using Microsoft.AspNetCore.Identity;
+using WebApplication1.Domain;
+using WebApplication1.Infrastructure;
+
+namespace WebApplication1.Application;
+
+public sealed class AuthenticationService(JsonUserRepository users, PasswordHasher<User> passwordHasher)
+{
+    public IReadOnlyList<UserAccount> GetAccounts() => users.Load();
+
+    public User? FindUser(string userId) => users.Load()
+        .FirstOrDefault(account => account.User.UserId == userId)?.User;
+
+    public UserAccount? Authenticate(string userId, string password)
+    {
+        var account = users.Load().FirstOrDefault(candidate =>
+            string.Equals(candidate.User.UserId, userId.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (account is null)
+        {
+            return null;
+        }
+
+        var result = passwordHasher.VerifyHashedPassword(account.User, account.PasswordHash, password);
+        return result == PasswordVerificationResult.Failed ? null : account;
+    }
+}

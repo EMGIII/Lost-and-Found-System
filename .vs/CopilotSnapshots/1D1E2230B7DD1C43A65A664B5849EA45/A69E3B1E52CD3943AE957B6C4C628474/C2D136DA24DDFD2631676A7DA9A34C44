@@ -1,0 +1,39 @@
+﻿html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+  background: #f7f9fc;
+}
+
+.hero-panel { background: linear-gradient(135deg, #173b67, #2563a6); color: white; }
+.eyebrow { color: #5b7ea7; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.hero-panel .eyebrow { color: #b9d8f6; }
+.item-card { transition: transform .15s ease, box-shadow .15s ease; }
+.item-card:hover { transform: translateY(-2px); box-shadow: 0 .75rem 1.5rem rgba(23, 59, 103, .12) !important; }
+.empty-state { background: white; border: 1px dashed #cbd5e1; }
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

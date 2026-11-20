@@ -1,0 +1,7 @@
+@page
+@model WebApplication1.Pages.Claims.CreateModel
+@{
+	ViewData["Title"] = "Submit a claim";
+}
+@if (Model.Item is null){<div class="alert alert-danger">The item could not be found or is no longer available.</div>}else{<h1>Submit a claim</h1><p class="text-muted">Submit details showing why <strong>@Model.Item.Name</strong> belongs to you. Staff must verify your information before approving the claim.</p><div asp-validation-summary="ModelOnly" class="text-danger"></div><form method="post" class="card shadow-sm border-0"><input type="hidden" asp-for="ItemId" /><div class="card-body"><label asp-for="Description" class="form-label">Why do you believe this item is yours?</label><textarea asp-for="Description" class="form-control" rows="6"></textarea><span asp-validation-for="Description" class="text-danger"></span></div><div class="card-footer bg-white"><button class="btn btn-primary">Submit claim</button><a class="btn btn-outline-secondary ms-2" asp-page="/Items/Details" asp-route-id="@Model.Item.ItemId">Cancel</a></div></form>}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

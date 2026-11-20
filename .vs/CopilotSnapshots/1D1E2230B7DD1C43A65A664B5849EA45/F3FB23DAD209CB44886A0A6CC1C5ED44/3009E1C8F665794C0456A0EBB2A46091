@@ -1,0 +1,9 @@
+﻿@page
+@model WebApplication1.Pages.Items.RegisterFoundModel
+@{
+	ViewData["Title"] = "Register a found item";
+}
+<h1>Register a found item</h1><p class="text-muted">This form records an item held for verification.</p>
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form method="post" enctype="multipart/form-data" class="card shadow-sm border-0"><div class="card-body"><div class="row g-3"><div class="col-md-6"><label asp-for="Input.Name" class="form-label"></label><input asp-for="Input.Name" class="form-control" /><span asp-validation-for="Input.Name" class="text-danger"></span></div><div class="col-md-6"><label asp-for="Input.Category" class="form-label"></label><select asp-for="Input.Category" class="form-select"><option value="">Select a category</option><option>Electronics</option><option>Clothing</option><option>Documents</option><option>Keys</option><option>Wallet or purse</option><option>Books and school supplies</option><option>Jewelry</option><option>Other</option></select><span asp-validation-for="Input.Category" class="text-danger"></span></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

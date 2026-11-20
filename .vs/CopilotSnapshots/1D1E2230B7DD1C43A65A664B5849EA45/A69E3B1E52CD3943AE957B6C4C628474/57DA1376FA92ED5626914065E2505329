@@ -1,0 +1,7 @@
+﻿@page
+@model WebApplication1.Pages.Account.LoginModel
+@{
+	ViewData["Title"] = "Sign in";
+}
+<div class="row justify-content-center"><div class="col-md-6 col-lg-5"><div class="card shadow-sm border-0"><div class="card-body p-4"><div class="text-center mb-3"><img class="login-logo" src="~/images/school-logo.svg" alt="Infotech Development Systems Colleges logo" /></div><p class="eyebrow">Campus access</p><h1 class="h3">Sign in</h1>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
